@@ -58,6 +58,8 @@ public:
 
 	void TurnAtRate(float Rate);
 
+	void Raycast();
+
 	// TODO (NEEDS CLAMP) void LookUpRate(float Rate);
 
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }

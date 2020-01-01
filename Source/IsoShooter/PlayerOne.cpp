@@ -8,6 +8,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "DrawDebugHelpers.h"
 
 
 // Sets default values
@@ -79,6 +80,12 @@ void APlayerOne::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	check(PlayerInputComponent);
 
+	/// Action Mappings
+
+	PlayerInputComponent->BindAction("Fire", EInputEvent::IE_Pressed, this, &APlayerOne::Raycast);
+
+	/// Axis Mappings
+
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerOne::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerOne::MoveRight);
 
@@ -126,3 +133,22 @@ void APlayerOne::LookUpRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 */
+
+void APlayerOne::Raycast()
+{
+	FHitResult* HitResult = new FHitResult();
+	FVector StartTrace = GetCapsuleComponent()->GetComponentLocation();
+	FVector ForwardVector = GetCapsuleComponent()->GetForwardVector();
+	FVector EndTrace = (ForwardVector * 1000.f) + StartTrace;
+	FCollisionQueryParams* CQP = new FCollisionQueryParams();
+
+	if (GetWorld()->LineTraceSingleByChannel(*HitResult, StartTrace, EndTrace, ECC_Visibility, *CQP))
+	{
+		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor(255, 0, 0), true);
+
+		if (HitResult->GetActor() != NULL)
+		{
+			HitResult->GetActor()->Destroy();
+		}
+	}
+}
