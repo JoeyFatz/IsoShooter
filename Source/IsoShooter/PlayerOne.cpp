@@ -9,6 +9,10 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Sound/SoundCue.h"
+#include "Kismet/GameplayStatics.h"
+#include "BasicZombie.h"
+
 
 
 // Sets default values
@@ -32,8 +36,12 @@ APlayerOne::APlayerOne()
 	CameraBoom->SetRelativeLocation(CameraHeight);
 	CameraBoom->TargetArmLength = 700.f;
 	CameraBoom->bUsePawnControlRotation = true;
+	CameraBoom->bInheritYaw = true; // Testing
 	CameraBoom->bEnableCameraLag = true;
 	CameraBoom->CameraLagSpeed = 3.f;
+	CameraBoom->bEnableCameraRotationLag = true;
+	CameraBoom->CameraRotationLagSpeed = 9.f;
+
 	// TODO Calculate max camera lag distance
 
 	// Camera Component
@@ -43,7 +51,7 @@ APlayerOne::APlayerOne()
 	FollowCamera->bUsePawnControlRotation = false;
 	
 	// Camera rotation speed
-	BaseTurnRate = 65.f;
+	BaseTurnRate = 65.f; // TODO Set variable to be editable in menu for controller sensitivity
 
 	/// Sets Character Movement and Values
 
@@ -51,7 +59,7 @@ APlayerOne::APlayerOne()
 	WalkSpeed = 400.f;
 
 	// Sets character rotation to movement (Independent of camera)
-	bUseControllerRotationYaw = false;
+	bUseControllerRotationYaw = true; // Can disable to set rotation to mouse
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 	
@@ -102,7 +110,7 @@ void APlayerOne::MoveForward(float Value)
 	if ((Controller != nullptr) && (Value != 0.f))
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f); // Rotation.Yaw
 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 		AddMovementInput(Direction, Value);
@@ -114,7 +122,7 @@ void APlayerOne::MoveRight(float Value)
 	if ((Controller != nullptr) && (Value != 0.f))
 	{
 		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
+		const FRotator YawRotation(0.f, Rotation.Yaw, 0.f); // Rotation.Yaw
 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		AddMovementInput(Direction, Value);
@@ -136,19 +144,24 @@ void APlayerOne::LookUpRate(float Rate)
 
 void APlayerOne::Raycast()
 {
-	FHitResult* HitResult = new FHitResult();
+	// Play Gunshot Sound Effect
+	UGameplayStatics::PlaySound2D(this, GunShotSound);
+
+	FHitResult* HitResult = new FHitResult(); // Make new hitresult on stack
 	FVector StartTrace = GetCapsuleComponent()->GetComponentLocation();
 	FVector ForwardVector = GetCapsuleComponent()->GetForwardVector();
-	FVector EndTrace = (ForwardVector * 1000.f) + StartTrace;
-	FCollisionQueryParams* CQP = new FCollisionQueryParams();
+	FVector EndTrace = (ForwardVector * 2000.f) + StartTrace;
+	FCollisionQueryParams* CQP = new FCollisionQueryParams(); 
+	AActor* ActorHit = HitResult->GetActor();
 
 	if (GetWorld()->LineTraceSingleByChannel(*HitResult, StartTrace, EndTrace, ECC_Visibility, *CQP))
 	{
-		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor(255, 0, 0), true);
+		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor(205, 205, 205), false, .25f) ;
+		ABasicZombie* EnemyTarget = Cast<ABasicZombie>(HitResult->Actor.Get());
 
-		if (HitResult->GetActor() != NULL)
+		if ( (EnemyTarget != NULL) && (!EnemyTarget->IsPendingKill()) )
 		{
-			HitResult->GetActor()->Destroy();
+			EnemyTarget->DamageEnemy(34.f);
 		}
 	}
 }

@@ -23,6 +23,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Sounds")
+	class USoundCue* GunShotSound;
+
+
 	/// Variables
 
 	/** Sets camera rotation speed */
