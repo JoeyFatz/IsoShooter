@@ -26,6 +26,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon | Sounds")
 	class USoundCue* GunShotSound;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Items)
+	class AWeaponPickup* EquippedWeapon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items)
+	class APickup* ActiveOverlappingItem;
+
+	FORCEINLINE AWeaponPickup* GetEquippedWeapon() { return EquippedWeapon; }
+	FORCEINLINE void SetActiveOverlappingItem(APickup* Pickup) { ActiveOverlappingItem = Pickup; }
 
 	/// Variables
 
@@ -63,6 +71,15 @@ public:
 	void TurnAtRate(float Rate);
 
 	void Raycast();
+
+	bool bRMBDown;
+	
+	void RMBDown();
+	
+	void RMBUp();
+	
+	void SetEquippedWeapon(AWeaponPickup* WeaponToSet);
+
 
 	// TODO (NEEDS CLAMP) void LookUpRate(float Rate);
 

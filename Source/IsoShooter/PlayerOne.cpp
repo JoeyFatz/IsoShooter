@@ -1,7 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
+// Actors
 #include "PlayerOne.h"
+#include "Zombie.h"
+#include "BasicZombie.h"
+#include "WeaponPickup.h"
+// Components
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
@@ -11,7 +15,7 @@
 #include "DrawDebugHelpers.h"
 #include "Sound/SoundCue.h"
 #include "Kismet/GameplayStatics.h"
-#include "BasicZombie.h"
+
 
 
 
@@ -66,6 +70,8 @@ APlayerOne::APlayerOne()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 540.f, 0.f);
 
+	bRMBDown = false;
+
 }
 
 // Called when the game starts or when spawned
@@ -91,6 +97,9 @@ void APlayerOne::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	/// Action Mappings
 
 	PlayerInputComponent->BindAction("Fire", EInputEvent::IE_Pressed, this, &APlayerOne::Raycast);
+	PlayerInputComponent->BindAction("Grab", EInputEvent::IE_Pressed, this, &APlayerOne::RMBDown);
+	PlayerInputComponent->BindAction("Grab", EInputEvent::IE_Released, this, &APlayerOne::RMBUp);
+
 
 	/// Axis Mappings
 
@@ -157,11 +166,40 @@ void APlayerOne::Raycast()
 	if (GetWorld()->LineTraceSingleByChannel(*HitResult, StartTrace, EndTrace, ECC_Visibility, *CQP))
 	{
 		DrawDebugLine(GetWorld(), StartTrace, EndTrace, FColor(205, 205, 205), false, .25f) ;
-		ABasicZombie* EnemyTarget = Cast<ABasicZombie>(HitResult->Actor.Get());
+		AZombie* EnemyTarget = Cast<AZombie>(HitResult->Actor.Get());
 
 		if ( (EnemyTarget != NULL) && (!EnemyTarget->IsPendingKill()) )
 		{
 			EnemyTarget->DamageEnemy(34.f);
 		}
 	}
+}
+
+void APlayerOne::RMBDown()
+{
+	bRMBDown = true;
+
+	if (ActiveOverlappingItem)
+	{
+		AWeaponPickup* Weapon = Cast<AWeaponPickup>(ActiveOverlappingItem);
+		if (Weapon)
+		{
+			Weapon->Equip(this);
+			SetActiveOverlappingItem(nullptr);
+		}
+	}
+}
+
+void APlayerOne::RMBUp()
+{
+	bRMBDown = false;
+}
+
+void APlayerOne::SetEquippedWeapon(AWeaponPickup* WeaponToSet)
+{
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->Destroy();
+	}
+	EquippedWeapon = WeaponToSet;
 }
